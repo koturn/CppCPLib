@@ -42,9 +42,9 @@ private:
   mul(Matrix<ElmType>& matZ, const Matrix<ElmType>& matX, const Matrix<ElmType>& matY)
   {
     for (size_type i = 0; i < matZ.nRow; i++) {
-      for (size_type j = 0; j < matZ.nCol; j++) {
+      for (size_type k = 0; k < matX.col; k++) {
         ElmType p = 0;
-        for (size_type k = 0; k < matX.col; k++) {
+        for (size_type j = 0; j < matZ.nCol; j++) {
           p += matX[j][k] * matY[k][j];
         }
         matZ[i][j] = p;
@@ -369,17 +369,3 @@ public:
 
 
 #endif  // MATRIX_H
-
-
-int
-main()
-{
-  Matrix<double> a(2, 2);
-  Matrix<double> b = Matrix<double>::Identity(2);
-  a[0][0] = 1;
-  std::cout << (a + b) << std::endl;
-  std::cout << a << std::endl;
-  std::cout << (a += b) << std::endl;
-  std::cout << a << std::endl;
-  return 0;
-}
