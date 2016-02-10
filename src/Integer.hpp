@@ -2,9 +2,18 @@
 #define INTEGER_H
 
 #include <cmath>
-#include <iostream>
+#include <algorithm>
+#include <vector>
+#include <map>
 
 
+/*!
+ * @brief Identify specified integer is prime or not.
+ *
+ * @tparam IntType  Integer type
+ * @param [in] n  Integer to identify prime or not
+ * @return  Return true if specified integer is true, otherwise return false
+ */
 template<typename IntType>
 static bool
 isPrime(IntType n)
@@ -25,6 +34,39 @@ isPrime(IntType n)
 }
 
 
+/*!
+ * @brief Make prime table
+ *
+ * @tparam IntType  Integer type
+ * @param [in] n  Upper limit
+ *
+ * @return  std::vector of prime table
+ */
+template<typename IntType>
+static std::vector<bool>
+makePrimeTable(IntType n)
+{
+  std::vector<bool> primeTable(n + 1, true);
+  primeTable[0] = primeTable[1] = false;
+  for (int i = 2; i * i <= n; i++) {
+    if (primeTable[i]) {
+      for (int j = i * 2; j <= n; j += i) {
+        primeTable[i] = false;
+      }
+    }
+  }
+  return primeTable;
+}
+
+
+/*!
+ * @brief Defactorize specified integer
+ *
+ * @tparam IntType  Integer type
+ * @param [in] n  An integer
+ *
+ * @return  std::map of prime factors of specified integer
+ */
 template<typename IntType>
 static std::map<IntType, int>
 defactorize(IntType n)
@@ -47,6 +89,88 @@ defactorize(IntType n)
     primeFactors[n] = 1;
   }
   return primeFactors;
+}
+
+
+/*!
+ * @brief Calculate divisors of specified integer
+ *
+ * @tparam IntType  Integer type
+ * @param [in] n  An integer
+ *
+ * @return  std::vector of divisors of specified integer
+ */
+template <typename IntType>
+std::vector<IntType>
+divisors(IntType n)
+{
+  std::vector<IntType> divisors;
+  for (IntType i = 1; i * i <= n; i++) {
+    if (n % i == 0) {
+      divisors.push_back(i);
+      if (i != n / i) {
+        divisors.push_back(n / i);
+      }
+    }
+  }
+  std::sort(divisors.begin(), divisors.end());
+  return divisors;
+}
+
+
+/*!
+ * @brief Extended Euclidean algorithm
+ * Calculate (x, y) s.t. ax + by = gcd(a, b)
+ *
+ * @tparam SignedIntType  Signed integer type
+ * @param [in]  a  First input parameter
+ * @param [in]  b  Second input parameter
+ * @param [out] x  First output parameter
+ * @param [out] y  Second output parameter
+ *
+ * @return  GCD of a and b
+ */
+template<typename SignedIntType>
+SignedIntType
+extgcd(SignedIntType a, SignedIntType b, SignedIntType& x, SignedIntType& y)
+{
+  if (b == 0) {
+    x = 1;
+    y = 0;
+    return a;
+  } else {
+    SignedIntType g = extgcd(b, a % b, y, x);
+    y -= (a / b) * x;
+    return g;
+  }
+}
+
+
+/*!
+ * @brief Euler's totient function
+ * Calculate the number of disjoint integers i s.t. 1 <= i <= n
+ *
+ * @tparam IntType  Integer type
+ * @param [in] n    Upper limit
+ *
+ * @return  The number of disjoint integers
+ */
+template<typename IntType>
+int eulerTotient(IntType n)
+{
+  int nDisjoint = n;
+  for (IntType i = 2; i * i <= n; i++) {
+    if (n % i == 0) {
+      nDisjoint = nDisjoint / i * (i - 1);
+      while (n % i == 0) {
+        n /= i;
+      }
+    }
+  }
+  if (n > 1) {
+    nDisjoint = nDisjoint / n * (n - 1);
+  }
+  return nDisjoint;
 }
 
 
