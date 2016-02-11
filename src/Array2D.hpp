@@ -1,5 +1,5 @@
-#ifndef ARRAY2D_H
-#define ARRAY2D_H
+#ifndef ARRAY2D_HPP
+#define ARRAY2D_HPP
 
 #include <cassert>
 #include <cstring>
@@ -104,4 +104,4 @@ public:
 };  // class Array2D
 
 
-#endif  // ARRAY2D_H
+#endif  // ARRAY2D_HPP

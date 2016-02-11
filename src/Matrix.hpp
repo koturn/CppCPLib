@@ -1,5 +1,5 @@
-#ifndef ARRAY2D_H
-#define ARRAY2D_H
+#ifndef ARRAY2D_HPP
+#define ARRAY2D_HPP
 
 #include <cassert>
 #include <cstring>
@@ -368,4 +368,4 @@ public:
 };  // class Matrix
 
 
-#endif  // MATRIX_H
+#endif  // MATRIX_HPP

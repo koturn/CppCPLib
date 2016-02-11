@@ -1,5 +1,5 @@
-#ifndef INTEGER_H
-#define INTEGER_H
+#ifndef INTEGER_HPP
+#define INTEGER_HPP
 
 #include <cmath>
 #include <algorithm>
@@ -174,4 +174,4 @@ int eulerTotient(IntType n)
 }
 
 
-#endif  // INTEGER_H
+#endif  // INTEGER_HPP
