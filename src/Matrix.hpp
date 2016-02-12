@@ -185,6 +185,17 @@ public:
     return div(*this, *this, that);
   }
 
+  Matrix<ElmType>
+  pow(size_type n) const
+  {
+    assert(this->nRow == that.nRow && this->nCol == that.nCol);
+    Matrix<ElmType> result(this->nRow, this->nCol);
+    for (int i = 0; i < n; i++) {
+      mul(result, *this, *this);
+    }
+    return result;
+  }
+
   ElmType
   det() const
   {
