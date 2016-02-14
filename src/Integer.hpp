@@ -77,12 +77,11 @@ defactorize(IntType n)
   if (cnt != 0) {
     primeFactors[2] = cnt;
   }
-  for (IntType i = 3, iMax = n; i * i <= iMax; i += 2) {
+  for (IntType i = 3; i * i <= n; i += 2) {
     cnt = 0;
     for (; n % i == 0; n /= i, cnt++);
     if (cnt != 0) {
       primeFactors[i] = cnt;
-      iMax = n;
     }
   }
   if (n != 1) {
