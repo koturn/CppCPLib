@@ -2,61 +2,62 @@
 #define BITS_HPP
 
 #include <cstdint>
+#include <type_traits>
 #ifdef _MSC_VER
 #  include <intrin.h>
 #endif
 
 
 #if defined(__GNUC__)
-static int
+static inline int
 popcnt(std::uint8_t n)
 {
   return __builtin_popcount(n);
 }
 
-static int
+static inline int
 popcnt(std::uint16_t n)
 {
   return __builtin_popcount(n);
 }
 
-static int
+static inline int
 popcnt(std::uint32_t n)
 {
   return __builtin_popcount(n);
 }
 
-static int
+static inline int
 popcnt(std::uint64_t n)
 {
   return __builtin_popcountll(n);
 }
 
 #elif defined(_MSC_VER)
-static int
+static inline int
 popcnt(std::uint8_t n)
 {
   return __popcnt16(n);
 }
 
-static int
+static inline int
 popcnt(std::uint16_t n)
 {
   return __popcnt16(n);
 }
 
-static int
+static inline int
 popcnt(std::uint32_t n)
 {
   return __popcnt(n);
 }
 
-static int
+static inline int
 popcnt(std::uint64_t n)
 {
   return __popcnt64(n);
 }
-#endif  // __GNUC__
+#else
 
 // 0x55555555 = 0b01010101010101010101010101010101
 // 0x33333333 = 0b00110011001100110011001100110011
@@ -64,7 +65,7 @@ popcnt(std::uint64_t n)
 // 0x00ff00ff = 0b00000000111111110000000011111111
 // 0x0000ffff = 0b00000000000000001111111111111111
 
-static int
+static inline int
 popcnt(std::uint8_t n)
 {
   n = (n & 0x55u) + (n >> 1 & 0x55u);
@@ -72,7 +73,7 @@ popcnt(std::uint8_t n)
   return (n & 0x0fu) + (n >> 4 & 0x0fu);
 }
 
-static int
+static inline int
 popcnt(std::uint16_t n)
 {
   n = (n & 0x5555u) + (n >> 1 & 0x5555u);
@@ -81,7 +82,7 @@ popcnt(std::uint16_t n)
   return (n & 0x00ffu) + (n >> 8 & 0x00ffu);
 }
 
-static int
+static inline int
 popcnt(std::uint32_t n)
 {
   n = (n & 0x55555555u) + (n >> 1 & 0x55555555u);
@@ -91,7 +92,7 @@ popcnt(std::uint32_t n)
   return (n & 0x0000ffffu) + (n >> 16 & 0x0000ffffu);
 }
 
-static int
+static inline int
 popcnt(std::uint64_t n)
 {
   n = (n & 0x5555555555555555ull) + (n >> 1 & 0x5555555555555555ull);
@@ -101,61 +102,46 @@ popcnt(std::uint64_t n)
   n = (n & 0x0000ffff0000ffffull) + (n >> 16 & 0x0000ffff0000ffffull);
   return (n & 0x00000000ffffffffull) + (n >> 32 & 0x00000000ffffffffull);
 }
+#endif  // __GNUC__
 
-static int
-popcnt(std::int8_t n)
-{
-  return popcnt(static_cast<std::uint8_t>(n));
-}
 
-static int
-popcnt(std::int16_t n)
+template<typename T, typename std::enable_if<std::is_signed<T>::value, std::nullptr_t>::type = nullptr>
+static inline int
+popcnt(T n)
 {
-  return popcnt(static_cast<std::uint16_t>(n));
-}
-
-static int
-popcnt(std::int32_t n)
-{
-  return popcnt(static_cast<std::uint32_t>(n));
-}
-
-static int
-popcnt(std::int64_t n)
-{
-  return popcnt(static_cast<std::uint64_t>(n));
+  return popcnt(static_cast<typename std::make_unsigned<T>::type>(n));
 }
 
 
 
 
 #if defined(__GNUC__)
-static int
+static inline int
 bsf(std::uint8_t n)
 {
   return __builtin_ffs(n) - 1;
 }
 
-static int
+static inline int
 bsf(std::uint16_t n)
 {
   return __builtin_ffs(n) - 1;
 }
 
-static int
+static inline int
 bsf(std::uint32_t n)
 {
   return __builtin_ffs(n) - 1;
 }
 
-static int
+static inline int
 bsf(std::uint64_t n)
 {
   return __builtin_ffsll(n) - 1;
 }
 
 #elif defined(_MSC_VER)
-static int
+static inline int
 bsf(std::uint8_t n)
 {
   int index;
@@ -163,7 +149,7 @@ bsf(std::uint8_t n)
   return isNonZero ? index : -1;
 }
 
-static int
+static inline int
 bsf(std::uint16_t n)
 {
   int index;
@@ -171,7 +157,7 @@ bsf(std::uint16_t n)
   return isNonZero ? index : -1;
 }
 
-static int
+static inline int
 bsf(std::uint32_t n)
 {
   int index;
@@ -179,16 +165,16 @@ bsf(std::uint32_t n)
   return isNonZero ? index : -1;
 }
 
-static int
+static inline int
 bsf(std::uint64_t n)
 {
   int index;
   unsigned char isNonZero = _BitScanForward64(reinterpret_cast<unsigned long *>(&index), n);
   return isNonZero ? index : -1;
 }
-#endif  // defined(__GNUC__)
+#else
 
-static int
+static inline int
 bsf(std::uint8_t n)
 {
   if (n == 0) {
@@ -201,7 +187,7 @@ bsf(std::uint8_t n)
   }
 }
 
-static int
+static inline int
 bsf(std::uint16_t n)
 {
   if (n == 0) {
@@ -215,7 +201,7 @@ bsf(std::uint16_t n)
   }
 }
 
-static int
+static inline int
 bsf(std::uint32_t n)
 {
   if (n == 0) {
@@ -230,7 +216,7 @@ bsf(std::uint32_t n)
   }
 }
 
-static int
+static inline int
 bsf(std::uint64_t n)
 {
   if (n == 0) {
@@ -245,62 +231,46 @@ bsf(std::uint64_t n)
     return popcnt(~n);
   }
 }
+#endif  // defined(__GNUC__)
 
 
-static int
-bsf(std::int8_t n)
+template<typename T, typename std::enable_if<std::is_signed<T>::value, std::nullptr_t>::type = nullptr>
+static inline int
+bfs(T n)
 {
-  return bsf(static_cast<std::uint8_t>(n));
-}
-
-static int
-bsf(std::int16_t n)
-{
-  return bsf(static_cast<std::uint16_t>(n));
-}
-
-static int
-bsf(std::int32_t n)
-{
-  return bsf(static_cast<std::uint32_t>(n));
-}
-
-static int
-bsf(std::int64_t n)
-{
-  return bsf(static_cast<std::uint64_t>(n));
+  return bfs(static_cast<typename std::make_unsigned<T>::type>(n));
 }
 
 
 
 
 #if defined(__GNUC__)
-static int
+static inline int
 bsr(std::uint8_t n)
 {
   return n == 0 ? -1 : (((__builtin_clz(n) & 0x07u) ^ 0x07u));
 }
 
-static int
+static inline int
 bsr(std::uint16_t n)
 {
   return n == 0 ? -1 : (((__builtin_clz(n) & 0x0fu) ^ 0x0fu));
 }
 
-static int
+static inline int
 bsr(std::uint32_t n)
 {
   return n == 0 ? -1 : (__builtin_clz(n) ^ 0x1fu);
 }
 
-static int
+static inline int
 bsr(std::uint64_t n)
 {
   return n == 0 ? -1 : (__builtin_clzll(n) ^ 0x3fu);
 }
 
 #elif defined(_MSC_VER)
-static int
+static inline int
 bsr(std::uint8_t n)
 {
   int index;
@@ -308,7 +278,7 @@ bsr(std::uint8_t n)
   return isNonZero ? index : -1;
 }
 
-static int
+static inline int
 bsr(std::uint16_t n)
 {
   int index;
@@ -316,7 +286,7 @@ bsr(std::uint16_t n)
   return isNonZero ? index : -1;
 }
 
-static int
+static inline int
 bsr(std::uint32_t n)
 {
   int index;
@@ -324,16 +294,16 @@ bsr(std::uint32_t n)
   return isNonZero ? index : -1;
 }
 
-static int
+static inline int
 bsr(std::uint64_t n)
 {
   int index;
   unsigned char isNonZero = _BitScanReverse64(reinterpret_cast<unsigned long *>(&index), n);
   return isNonZero ? index : -1;
 }
-#endif  // defined(__GNUC__)
+#else
 
-static int
+static inline int
 bsr(std::uint8_t n)
 {
   if (n == 0) {
@@ -346,7 +316,7 @@ bsr(std::uint8_t n)
   }
 }
 
-static int
+static inline int
 bsr(std::uint16_t n)
 {
   if (n == 0) {
@@ -360,7 +330,7 @@ bsr(std::uint16_t n)
   }
 }
 
-static int
+static inline int
 bsr(std::uint32_t n)
 {
   if (n == 0) {
@@ -375,7 +345,7 @@ bsr(std::uint32_t n)
   }
 }
 
-static int
+static inline int
 bsr(std::uint64_t n)
 {
   if (n == 0) {
@@ -390,30 +360,14 @@ bsr(std::uint64_t n)
     return popcnt(n) - 1;
   }
 }
+#endif  // defined(__GNUC__)
 
 
-static int
-bsr(std::int8_t n)
+template<typename T, typename std::enable_if<std::is_signed<T>::value, std::nullptr_t>::type = nullptr>
+static inline int
+bsr(T n)
 {
-  return bsr(static_cast<std::uint8_t>(n));
-}
-
-static int
-bsr(std::int16_t n)
-{
-  return bsr(static_cast<std::uint16_t>(n));
-}
-
-static int
-bsr(std::int32_t n)
-{
-  return bsr(static_cast<std::uint32_t>(n));
-}
-
-static int
-bsr(std::int64_t n)
-{
-  return bsr(static_cast<std::uint64_t>(n));
+  return bsr(static_cast<typename std::make_unsigned<T>::type>(n));
 }
 
 
