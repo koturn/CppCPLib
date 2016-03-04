@@ -3,8 +3,9 @@
 
 #include <cmath>
 #include <algorithm>
-#include <vector>
 #include <map>
+#include <type_traits>
+#include <vector>
 
 
 /*!
@@ -14,7 +15,7 @@
  * @param [in] n  Integer to identify prime or not
  * @return  Return true if specified integer is true, otherwise return false
  */
-template<typename IntType>
+template<typename IntType, typename std::enable_if<std::is_integral<IntType>::value, std::nullptr_t>::type = nullptr>
 static bool
 isPrime(IntType n)
 {
@@ -42,7 +43,7 @@ isPrime(IntType n)
  *
  * @return  std::vector of prime table
  */
-template<typename IntType>
+template<typename IntType, typename std::enable_if<std::is_integral<IntType>::value, std::nullptr_t>::type = nullptr>
 static std::vector<bool>
 makePrimeTable(IntType n)
 {
@@ -67,7 +68,7 @@ makePrimeTable(IntType n)
  *
  * @return  std::map of prime factors of specified integer
  */
-template<typename IntType>
+template<typename IntType, typename std::enable_if<std::is_integral<IntType>::value, std::nullptr_t>::type = nullptr>
 static std::map<IntType, int>
 defactorize(IntType n)
 {
@@ -99,7 +100,7 @@ defactorize(IntType n)
  *
  * @return  std::vector of divisors of specified integer
  */
-template <typename IntType>
+template <typename IntType, typename std::enable_if<std::is_integral<IntType>::value, std::nullptr_t>::type = nullptr>
 std::vector<IntType>
 divisors(IntType n)
 {
@@ -129,7 +130,7 @@ divisors(IntType n)
  *
  * @return  GCD of a and b
  */
-template<typename SignedIntType>
+template<typename SignedIntType, typename std::enable_if<std::is_signed<SignedIntType>::value, std::nullptr_t>::type = nullptr>
 SignedIntType
 extgcd(SignedIntType a, SignedIntType b, SignedIntType& x, SignedIntType& y)
 {
@@ -155,7 +156,7 @@ extgcd(SignedIntType a, SignedIntType b, SignedIntType& x, SignedIntType& y)
  * @return  The number of disjoint integers
  */
 template<typename IntType>
-int eulerTotient(IntType n)
+int eulerTotient(IntType n, typename std::enable_if<std::is_integral<IntType>::value, std::nullptr_t>::type = nullptr)
 {
   int nDisjoint = n;
   for (IntType i = 2; i * i <= n; i++) {
