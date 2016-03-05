@@ -2,106 +2,78 @@
 #define DOUBLE_HPP
 
 #include <cmath>
+#include <type_traits>
 
-static const double EPS = 1.0e-9;
 
-
-template<int PRECISION>
-static inline bool
-eq(double a, double b)
+template<typename FType=double, typename std::enable_if<std::is_floating_point<FType>::value, std::nullptr_t>::type = nullptr>
+static inline constexpr double
+geteps(int prec=9)
 {
-  return std::abs(a - b) < std::pow(10.0, -PRECISION);
-}
-
-static inline bool
-eq(double a, double b)
-{
-  return std::abs(a - b) < EPS;
+  return std::pow(static_cast<FType>(1.0), -prec - 1);
 }
 
 
-template<int PRECISION>
+template<int PRECISION=9, typename FType=double, typename std::enable_if<std::is_floating_point<FType>::value, std::nullptr_t>::type = nullptr>
 static inline bool
-neq(double a, double b)
+eq(FType a, FType b)
 {
-  return std::abs(a - b) >= std::pow(10.0, -PRECISION);
-}
-
-static inline bool
-neq(double a, double b)
-{
-  return std::abs(a - b) >= EPS;
+  constexpr FType eps = geteps<FType>(PRECISION);
+  return std::abs(a - b) < eps;
 }
 
 
-template<int PRECISION>
+template<int PRECISION=9, typename FType=double, typename std::enable_if<std::is_floating_point<FType>::value, std::nullptr_t>::type = nullptr>
 static inline bool
-lt(double a, double b)
+neq(FType a, FType b)
 {
-  return a < b - std::pow(10.0, -PRECISION);
-}
-
-static inline bool
-lt(double a, double b)
-{
-  return a < b - EPS;
+  constexpr FType eps = geteps<FType>(PRECISION);
+  return std::abs(a - b) >= eps;
 }
 
 
-template<int PRECISION>
+template<int PRECISION=9, typename FType=double, typename std::enable_if<std::is_floating_point<FType>::value, std::nullptr_t>::type = nullptr>
 static inline bool
-leq(double a, double b)
+lt(FType a, FType b)
 {
-  return a < b + std::pow(10.0, -PRECISION);
-}
-
-static inline bool
-leq(double a, double b)
-{
-  return a < b + EPS;
+  constexpr FType eps = geteps<FType>(PRECISION);
+  return a < b - eps;
 }
 
 
-template<int PRECISION>
+template<int PRECISION=9, typename FType=double, typename std::enable_if<std::is_floating_point<FType>::value, std::nullptr_t>::type = nullptr>
 static inline bool
-gt(double a, double b)
+leq(FType a, FType b)
 {
-  return a > b - std::pow(10.0, -PRECISION);
-}
-
-static inline bool
-gt(double a, double b)
-{
-  return a > b - EPS;
+  constexpr FType eps = geteps<FType>(PRECISION);
+  return a < b + eps;
 }
 
 
-template<int PRECISION>
+template<int PRECISION=9, typename FType=double, typename std::enable_if<std::is_floating_point<FType>::value, std::nullptr_t>::type = nullptr>
 static inline bool
-geq(double a, double b)
+gt(FType a, FType b)
 {
-  return a > b + std::pow(10.0, -PRECISION);
-}
-
-static inline bool
-geq(double a, double b)
-{
-  return a > b + EPS;
+  constexpr FType eps = geteps<FType>(PRECISION);
+  return a > b - eps;
 }
 
 
-template<int PRECISION>
+template<int PRECISION=9, typename FType=double, typename std::enable_if<std::is_floating_point<FType>::value, std::nullptr_t>::type = nullptr>
 static inline bool
-isin(double x, double a, double b)
+geq(FType a, FType b)
 {
-  return a - std::pow(10.0, -PRECISION) <= x && x <= b + std::pow(10.0, -PRECISION);
+  constexpr FType eps = geteps<FType>(PRECISION);
+  return a > b + eps;
 }
 
+
+template<int PRECISION=9, typename FType=double, typename std::enable_if<std::is_floating_point<FType>::value, std::nullptr_t>::type = nullptr>
 static inline bool
-isin(double x, double a, double b)
+isin(FType x, FType a, FType b)
 {
-  return a - EPS <= x && x <= b + EPS;
+  return geq(x, a) && leq(x, b);
 }
+
 
 
 #endif  // DOUBLE_HPP
