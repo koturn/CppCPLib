@@ -1,5 +1,5 @@
-#ifndef ARRAY2D_HPP
-#define ARRAY2D_HPP
+#ifndef MATRIX_HPP
+#define MATRIX_HPP
 
 #include <cassert>
 #include <cstring>
