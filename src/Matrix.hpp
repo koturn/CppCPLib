@@ -5,6 +5,7 @@
 #include <cstring>
 #include <algorithm>
 #include <iostream>
+#include <memory>
 
 
 template<typename ElmType>
@@ -14,7 +15,11 @@ public:
 private:
   size_type nRow;
   size_type nCol;
+#if __cplusplus >= 201103L
+  std::unique_ptr<ElmType[]> data;
+#else
   ElmType* data;
+#endif
 
   static Matrix<ElmType>
   add(Matrix<ElmType>& matZ, const Matrix<ElmType>& matX, const Matrix<ElmType>& matY)
@@ -96,10 +101,12 @@ public:
     std::memcpy(data, that.data, nRow * nCol * sizeof(ElmType));
   }
 
+#if __cplusplus < 201103L
   ~Matrix()
   {
     delete[] data;
   }
+#endif
 
   void
   fill(const ElmType& value)
