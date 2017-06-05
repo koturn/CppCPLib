@@ -1,24 +1,31 @@
+/*!
+ * @file Integer.hpp
+ * @brief Utility functions about integers
+ * @author koturn
+ */
 #ifndef INTEGER_HPP
 #define INTEGER_HPP
 
 #include <cmath>
 #include <algorithm>
-#include <map>
 #include <type_traits>
+#include <unordered_map>
 #include <vector>
 
 
 /*!
  * @brief Identify specified integer is prime or not.
  *
- * @tparam IntType  Integer type
+ * @tparam T  Integer type
  * @param [in] n  Integer to identify prime or not
  * @return  Return true if specified integer is true, otherwise return false
  */
-template<typename IntType, typename std::enable_if<std::is_integral<IntType>::value, std::nullptr_t>::type = nullptr>
-static bool
-isPrime(IntType n)
+template<typename T>
+static inline bool
+isPrime(T n)
 {
+  static_assert(std::is_integral<T>::value, "[isPrime] T must be an integer type");
+
   if (n < 2) {
     return false;
   } else if (n == 2) {
@@ -26,7 +33,7 @@ isPrime(IntType n)
   } else if (n % 2 == 0) {
     return false;
   }
-  for (IntType i = 3; i * i <= n; i += 2) {
+  for (T i = 3; i * i <= n; i += 2) {
     if (n % i == 0) {
       return false;
     }
@@ -38,15 +45,22 @@ isPrime(IntType n)
 /*!
  * @brief Make prime table
  *
- * @tparam IntType  Integer type
+ * @tparam T  Integer type
  * @param [in] n  Upper limit
  *
  * @return  std::vector of prime table
  */
-template<typename IntType, typename std::enable_if<std::is_integral<IntType>::value, std::nullptr_t>::type = nullptr>
-static std::vector<bool>
-makePrimeTable(IntType n)
+template<typename T>
+static inline std::vector<bool>
+makePrimeTable(T n)
 {
+  static_assert(std::is_integral<T>::value, "[makePrimeTable] T must be an integer type");
+
+  if (n < 0) {
+    return std::vector<bool>();
+  } else if (n == 0) {
+    return std::vector<bool>{false};
+  }
   std::vector<bool> primeTable(n + 1, true);
   primeTable[0] = primeTable[1] = false;
   for (int i = 2; i * i <= n; i++) {
@@ -63,31 +77,55 @@ makePrimeTable(IntType n)
 /*!
  * @brief Defactorize specified integer
  *
- * @tparam IntType  Integer type
+ * @tparam T  Integer type
+ * @tparam F  Function type which equivalent to std::function<void(T, int)>
  * @param [in] n  An integer
- *
- * @return  std::map of prime factors of specified integer
  */
-template<typename IntType, typename std::enable_if<std::is_integral<IntType>::value, std::nullptr_t>::type = nullptr>
-static std::map<IntType, int>
-defactorize(IntType n)
+template<
+  typename T,
+  typename F
+>
+static inline void
+defactorize(T n, const F& f)
 {
-  std::map<IntType, int> primeFactors;
+  static_assert(std::is_integral<T>::value, "[defactorize] T must be an integer type");
+
   int cnt = 0;
   for (; n % 2 == 0; n /= 2, cnt++);
   if (cnt != 0) {
-    primeFactors[2] = cnt;
+    f(2, cnt);
   }
-  for (IntType i = 3; i * i <= n; i += 2) {
+  for (T i = 3; i * i <= n; i += 2) {
     cnt = 0;
     for (; n % i == 0; n /= i, cnt++);
     if (cnt != 0) {
-      primeFactors[i] = cnt;
+      f(i, cnt);
     }
   }
   if (n != 1) {
-    primeFactors[n] = 1;
+    f(n, 1);
   }
+}
+
+
+/*!
+ * @brief Defactorize specified integer
+ *
+ * @tparam T  Integer type
+ * @param [in] n  An integer
+ *
+ * @return  std::unordered_map of prime factors of specified integer
+ */
+template<typename T>
+static inline std::unordered_map<T, int>
+defactorize(T n)
+{
+  static_assert(std::is_integral<T>::value, "[defactorize] T must be an integer type");
+
+  std::unordered_map<T, int> primeFactors;
+  defactorize(n, [&primeFactors](T p, int cnt){
+    primeFactors[p] = cnt;
+  });
   return primeFactors;
 }
 
@@ -95,25 +133,49 @@ defactorize(IntType n)
 /*!
  * @brief Calculate divisors of specified integer
  *
- * @tparam IntType  Integer type
+ * @tparam T  Integer type
+ * @tparam F  Function type which equivalent to std::function<void(T)>
+ * @param [in] n  An integer
+ */
+template<
+  typename T,
+  typename F
+>
+static inline void
+divisors(T n, const F& f)
+{
+  static_assert(std::is_integral<T>::value, "[divisors] T must be an integer type");
+
+  for (T i = 1; i * i <= n; i++) {
+    if (n % i == 0) {
+      f(i);
+      if (i != n / i) {
+        f(n / i);
+      }
+    }
+  }
+}
+
+
+/*!
+ * @brief Calculate divisors of specified integer
+ *
+ * @tparam T  Integer type
  * @param [in] n  An integer
  *
  * @return  std::vector of divisors of specified integer
  */
-template <typename IntType, typename std::enable_if<std::is_integral<IntType>::value, std::nullptr_t>::type = nullptr>
-std::vector<IntType>
-divisors(IntType n)
+template<typename T>
+static inline std::vector<T>
+divisors(T n)
 {
-  std::vector<IntType> divisors;
-  for (IntType i = 1; i * i <= n; i++) {
-    if (n % i == 0) {
-      divisors.push_back(i);
-      if (i != n / i) {
-        divisors.push_back(n / i);
-      }
-    }
-  }
-  std::sort(divisors.begin(), divisors.end());
+  static_assert(std::is_integral<T>::value, "[divisors] T must be an integer type");
+
+  std::vector<T> divisors;
+  divisors(n, [&divisors](decltype(divisors)::value_type v){
+    divisors.push_back(v);
+  });
+  std::sort(std::begin(divisors), std::end(divisors));
   return divisors;
 }
 
@@ -122,7 +184,7 @@ divisors(IntType n)
  * @brief Extended Euclidean algorithm
  * Calculate (x, y) s.t. ax + by = gcd(a, b)
  *
- * @tparam SignedIntType  Signed integer type
+ * @tparam T  Signed integer type
  * @param [in]  a  First input parameter
  * @param [in]  b  Second input parameter
  * @param [out] x  First output parameter
@@ -130,18 +192,47 @@ divisors(IntType n)
  *
  * @return  GCD of a and b
  */
-template<typename SignedIntType, typename std::enable_if<std::is_signed<SignedIntType>::value, std::nullptr_t>::type = nullptr>
-SignedIntType
-extgcd(SignedIntType a, SignedIntType b, SignedIntType& x, SignedIntType& y)
+template<
+  typename T,
+  typename U,
+  typename R = typename std::common_type<T, U>::type
+>
+static inline R
+extgcd(T a, U b, R& x, R& y)
 {
+  static_assert(
+    std::is_signed<T>::value && std::is_signed<U>::value && std::is_signed<R>::value,
+    "[extgcd] T, U and R must be a signed integer type");
+
   if (b == 0) {
     x = 1;
     y = 0;
     return a;
   } else {
-    SignedIntType g = extgcd(b, a % b, y, x);
+    T g = extgcd(b, a % b, y, x);
     y -= (a / b) * x;
     return g;
+  }
+}
+
+
+template<
+  typename T,
+  typename U,
+  typename R = typename std::common_type<T, U>::type
+>
+static inline std::pair<R, R>
+extgcd(T a, U b)
+{
+  static_assert(
+    std::is_signed<T>::value && std::is_signed<U>::value && std::is_signed<R>::value,
+    "[extgcd] T, U and R must be a signed integer type");
+
+  if (b == 0) {
+    return std::make_pair(1, 0);
+  } else{
+    const auto xy = extgcd(b, a % b);
+    return std::make_pair(xy.second, xy.first - a / b * xy.second);
   }
 }
 
@@ -150,16 +241,19 @@ extgcd(SignedIntType a, SignedIntType b, SignedIntType& x, SignedIntType& y)
  * @brief Euler's totient function
  * Calculate the number of disjoint integers i s.t. 1 <= i <= n
  *
- * @tparam IntType  Integer type
+ * @tparam T  Integer type
  * @param [in] n    Upper limit
  *
  * @return  The number of disjoint integers
  */
-template<typename IntType>
-int eulerTotient(IntType n, typename std::enable_if<std::is_integral<IntType>::value, std::nullptr_t>::type = nullptr)
+template<typename T>
+static inline int
+eulerTotient(T n)
 {
+  static_assert(std::is_integral<T>::value, "[eulerTotient] T must be an integer type");
+
   int nDisjoint = n;
-  for (IntType i = 2; i * i <= n; i++) {
+  for (T i = 2; i * i <= n; i++) {
     if (n % i == 0) {
       nDisjoint = nDisjoint / i * (i - 1);
       while (n % i == 0) {
