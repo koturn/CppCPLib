@@ -181,52 +181,119 @@ divisors(T n)
 
 
 /*!
+ * @brief Calculate Greatest Common Divisor
+ *
+ * @tparam T  Integer type
+ * @param [in] a  First integer
+ * @param [in] b  Second integer
+ *
+ * @return G.C.D. of a and b
+ */
+template<typename T>
+static inline T
+gcd(T a, T b)
+{
+  static_assert(std::is_integral<T>::value, "[gcd] T must be an integer type");
+
+#if __cplusplus >= 201703L
+  return std::gcd(a, b);  // <numeric>
+#elif defined(__GNUC__)
+  return std::__gcd(a, b);  // <algorithm>
+#else
+  T r;
+  while ((r = a % b) != 0) {
+    a = b;
+    b = r;
+  }
+  return a;
+#endif  // __cplusplus >= 201703L
+}
+
+
+/*!
+ * @brief Calculate Least Common Multiple
+ *
+ * @tparam T  Integer type
+ * @param [in] a  First integer
+ * @param [in] b  Second integer
+ *
+ * @return L.C.M. of a and b
+ */
+template<typename T>
+static inline T
+lcm(T a, T b)
+{
+  static_assert(std::is_integral<T>::value, "[lcm] T must be an integer type");
+
+#if __cplusplus >= 201703L
+  return std::lcm(a, b);  // <numeric>
+#else
+  return a / gcd(a, b) * b;
+#endif  // __cplusplus >= 201703L
+}
+
+
+/*!
  * @brief Extended Euclidean algorithm
  * Calculate (x, y) s.t. ax + by = gcd(a, b)
  *
- * @tparam T  Signed integer type
+ * @tparam T  Integer type for first argument
+ * @tparam U  Integer type for second argument
+ * @tparam R  Signed integer type for return value
  * @param [in]  a  First input parameter
  * @param [in]  b  Second input parameter
  * @param [out] x  First output parameter
  * @param [out] y  Second output parameter
  *
- * @return  GCD of a and b
+ * @return  G.C.D. of a and b
  */
 template<
   typename T,
   typename U,
-  typename R = typename std::common_type<T, U>::type
+  typename R = typename std::make_signed<typename std::common_type<T, U>::type>::type
 >
 static inline R
 extgcd(T a, U b, R& x, R& y)
 {
   static_assert(
-    std::is_signed<T>::value && std::is_signed<U>::value && std::is_signed<R>::value,
-    "[extgcd] T, U and R must be a signed integer type");
+    std::is_integral<T>::value && std::is_integral<U>::value && std::is_signed<R>::value,
+    "[extgcd] T and U must be integer type, R must be a signed integer type");
 
   if (b == 0) {
     x = 1;
     y = 0;
     return a;
   } else {
-    T g = extgcd(b, a % b, y, x);
+    auto g = extgcd(b, a % b, y, x);
     y -= (a / b) * x;
     return g;
   }
 }
 
 
+/*!
+ * @brief Extended Euclidean algorithm
+ * Calculate (x, y) s.t. ax + by = gcd(a, b)
+ *
+ * @tparam T  Integer type for first argument
+ * @tparam U  Integer type for second argument
+ * @tparam R  Signed integer type for return value
+ * @param [in]  a  First input parameter
+ * @param [in]  b  Second input parameter
+ *
+ * @return  std::pair<R, R> of x and y
+ */
 template<
   typename T,
   typename U,
-  typename R = typename std::common_type<T, U>::type
+  typename R = typename std::make_signed<typename std::common_type<T, U>::type>::type
 >
 static inline std::pair<R, R>
 extgcd(T a, U b)
 {
   static_assert(
-    std::is_signed<T>::value && std::is_signed<U>::value && std::is_signed<R>::value,
-    "[extgcd] T, U and R must be a signed integer type");
+    std::is_integral<T>::value && std::is_integral<U>::value && std::is_signed<R>::value,
+    "[extgcd] T and U must be integer type, R must be a signed integer type");
 
   if (b == 0) {
     return std::make_pair(1, 0);
@@ -234,6 +301,121 @@ extgcd(T a, U b)
     const auto xy = extgcd(b, a % b);
     return std::make_pair(xy.second, xy.first - a / b * xy.second);
   }
+}
+
+
+/*!
+ * @brief Determine if two integers are coprime or not.
+ *
+ * @tparam T  Integer type for first argument
+ * @tparam U  Integer type for second argument
+ * @param [in] a  First signed integer
+ * @param [in] b  Second signed integer
+ *
+ * @return True if a and b are coprime, otherwise false
+ */
+template<
+  typename T,
+  typename U
+>
+static inline bool
+coprime(T a, U b)
+{
+  static_assert(
+    std::is_integral<T>::value && std::is_integral<U>::value,
+    "[isCoprime] T and U must be integer type");
+
+  return gcd(a, b) == 1;
+}
+
+
+/*!
+ * @brief Calculate modular multiplicative inverse
+ *
+ * i.e caluculate x s.t. ax = 1 (mod m)
+ *
+ * @tparam T  Integer type for target integer
+ * @tparam U  Integer type for modulo
+ * @param [in] a    Target integer
+ * @param [in] mod  Modulo
+ *
+ * @return Modular multiplicative inverse of a
+ */
+template<
+  typename T,
+  typename U
+>
+static inline typename std::common_type<T, U>::type
+modinv(T a, U mod)
+{
+  static_assert(
+    std::is_integral<T>::value && std::is_integral<U>::value,
+    "[modinv] T and U must be integer type");
+
+  return (mod + extgcd(a, mod).first % mod) % mod;
+}
+
+
+/*!
+ * @brief Calculate n! mod m while avoiding overflow
+ *
+ * @tparam T  Integer type for target integer
+ * @tparam U  Integer type for modulo
+ * @param [in] n    Target integer
+ * @param [in] mod  Modulo
+ *
+ * @return n! mod m
+ */
+template<
+  typename T,
+  typename U
+>
+static inline typename std::common_type<T, U>::type
+modfact(T n, U mod)
+{
+  static_assert(
+    std::is_integral<T>::value && std::is_integral<U>::value,
+    "[modfact] T and U must be an integer type");
+
+  typename std::common_type<T, U>::type p = 1;
+  for (; n > 0; n--) {
+    p = (p * n) % mod;
+  }
+  return p;
+}
+
+
+/*!
+ * @brief Calculate a ** p mod m while avoiding overflow
+ *
+ * @tparam T  Integer type for base
+ * @tparam U  Integer type for exponent
+ * @tparam V  Integer type for modulo
+ * @param [in] a    Base
+ * @param [in] p    Exponent
+ * @param [in] mod  Modulo
+ *
+ * @return a ** p mod m
+ */
+template<
+  typename T,
+  typename U,
+  typename V
+>
+static inline typename std::common_type<T, V>::type
+powmod(T a, U p, V mod)
+{
+  static_assert(
+    std::is_integral<T>::value && std::is_integral<U>::value && std::is_integral<V>::value,
+    "[powmod] T, U and V must be an integer type");
+
+  typename std::common_type<T, V>::type ans = 1;
+  for (; p > 0; p >>= 1, a = (a * a) % mod) {
+    if ((p & 1) == 1) {
+      ans = (ans * a) % mod;
+    }
+  }
+  return ans;
 }
 
 
