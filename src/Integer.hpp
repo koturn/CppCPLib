@@ -22,7 +22,7 @@
  */
 template<typename T>
 static inline bool
-isPrime(T n)
+isPrime(T n) noexcept
 {
   static_assert(std::is_integral<T>::value, "[isPrime] T must be an integer type");
 
@@ -52,7 +52,7 @@ isPrime(T n)
  */
 template<typename T>
 static inline std::vector<bool>
-makePrimeTable(T n)
+makePrimeTable(T n) noexcept
 {
   static_assert(std::is_integral<T>::value, "[makePrimeTable] T must be an integer type");
 
@@ -86,7 +86,7 @@ template<
   typename F
 >
 static inline void
-defactorize(T n, const F& f)
+defactorize(T n, const F& f) noexcept
 {
   static_assert(std::is_integral<T>::value, "[defactorize] T must be an integer type");
 
@@ -118,7 +118,7 @@ defactorize(T n, const F& f)
  */
 template<typename T>
 static inline std::unordered_map<T, int>
-defactorize(T n)
+defactorize(T n) noexcept
 {
   static_assert(std::is_integral<T>::value, "[defactorize] T must be an integer type");
 
@@ -142,7 +142,7 @@ template<
   typename F
 >
 static inline void
-divisors(T n, const F& f)
+divisors(T n, const F& f) noexcept
 {
   static_assert(std::is_integral<T>::value, "[divisors] T must be an integer type");
 
@@ -167,7 +167,7 @@ divisors(T n, const F& f)
  */
 template<typename T>
 static inline std::vector<T>
-divisors(T n)
+divisors(T n) noexcept
 {
   static_assert(std::is_integral<T>::value, "[divisors] T must be an integer type");
 
@@ -191,7 +191,7 @@ divisors(T n)
  */
 template<typename T>
 static inline T
-gcd(T a, T b)
+gcd(T a, T b) noexcept
 {
   static_assert(std::is_integral<T>::value, "[gcd] T must be an integer type");
 
@@ -221,7 +221,7 @@ gcd(T a, T b)
  */
 template<typename T>
 static inline T
-lcm(T a, T b)
+lcm(T a, T b) noexcept
 {
   static_assert(std::is_integral<T>::value, "[lcm] T must be an integer type");
 
@@ -253,7 +253,7 @@ template<
   typename R = typename std::make_signed<typename std::common_type<T, U>::type>::type
 >
 static inline R
-extgcd(T a, U b, R& x, R& y)
+extgcd(T a, U b, R& x, R& y) noexcept
 {
   static_assert(
     std::is_integral<T>::value && std::is_integral<U>::value && std::is_signed<R>::value,
@@ -289,7 +289,7 @@ template<
   typename R = typename std::make_signed<typename std::common_type<T, U>::type>::type
 >
 static inline std::pair<R, R>
-extgcd(T a, U b)
+extgcd(T a, U b) noexcept
 {
   static_assert(
     std::is_integral<T>::value && std::is_integral<U>::value && std::is_signed<R>::value,
@@ -319,7 +319,7 @@ template<
   typename U
 >
 static inline bool
-coprime(T a, U b)
+coprime(T a, U b) noexcept
 {
   static_assert(
     std::is_integral<T>::value && std::is_integral<U>::value,
@@ -346,7 +346,7 @@ template<
   typename U
 >
 static inline typename std::common_type<T, U>::type
-modinv(T a, U mod)
+modinv(T a, U mod) noexcept
 {
   static_assert(
     std::is_integral<T>::value && std::is_integral<U>::value,
@@ -371,7 +371,7 @@ template<
   typename U
 >
 static inline typename std::common_type<T, U>::type
-modfact(T n, U mod)
+modfact(T n, U mod) noexcept
 {
   static_assert(
     std::is_integral<T>::value && std::is_integral<U>::value,
@@ -403,7 +403,7 @@ template<
   typename V
 >
 static inline typename std::common_type<T, V>::type
-powmod(T a, U p, V mod)
+powmod(T a, U p, V mod) noexcept
 {
   static_assert(
     std::is_integral<T>::value && std::is_integral<U>::value && std::is_integral<V>::value,
@@ -430,7 +430,7 @@ powmod(T a, U p, V mod)
  */
 template<typename T>
 static inline int
-eulerTotient(T n)
+eulerTotient(T n) noexcept
 {
   static_assert(std::is_integral<T>::value, "[eulerTotient] T must be an integer type");
 

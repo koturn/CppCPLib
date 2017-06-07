@@ -12,7 +12,7 @@
 
 template<typename T = double>
 static inline constexpr double
-geteps(int prec = 9)
+geteps(int prec = 9) noexcept
 {
   static_assert(std::is_floating_point<T>::value, "[geteps] T must be a floating point type");
 
@@ -25,7 +25,7 @@ template<
   typename T = double
 >
 static inline bool
-eq(T a, T b)
+eq(T a, T b) noexcept
 {
   static_assert(std::is_floating_point<T>::value, "[eq] T must be a floating point type");
 
@@ -39,7 +39,7 @@ template<
   typename T = double
 >
 static inline bool
-neq(T a, T b)
+neq(T a, T b) noexcept
 {
   static_assert(std::is_floating_point<T>::value, "[neq] T must be a floating point type");
 
@@ -53,7 +53,7 @@ template<
   typename T = double
 >
 static inline bool
-lt(T a, T b)
+lt(T a, T b) noexcept
 {
   static_assert(std::is_floating_point<T>::value, "[lt] T must be a floating point type");
 
@@ -67,7 +67,7 @@ template<
   typename T = double
 >
 static inline bool
-leq(T a, T b)
+leq(T a, T b) noexcept
 {
   static_assert(std::is_floating_point<T>::value, "[lt] T must be a floating point type");
 
@@ -81,7 +81,7 @@ template<
   typename T = double
 >
 static inline bool
-gt(T a, T b)
+gt(T a, T b) noexcept
 {
   static_assert(std::is_floating_point<T>::value, "[gt] T must be a floating point type");
 
@@ -95,7 +95,7 @@ template<
   typename T = double
 >
 static inline bool
-geq(T a, T b)
+geq(T a, T b) noexcept
 {
   static_assert(std::is_floating_point<T>::value, "[geq] T must be a floating point type");
 
@@ -109,7 +109,7 @@ template<
   typename T = double
 >
 static inline bool
-isin(T x, T a, T b)
+isin(T x, T a, T b) noexcept
 {
   static_assert(std::is_floating_point<T>::value, "[isin] T must be a floating point type");
 
