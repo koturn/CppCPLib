@@ -8,6 +8,7 @@
 
 #include <cmath>
 #include <algorithm>
+#include <tuple>
 #include <type_traits>
 #include <unordered_map>
 #include <vector>
@@ -234,77 +235,6 @@ lcm(T a, T b) noexcept
 
 
 /*!
- * @brief Extended Euclidean algorithm
- * Calculate (x, y) s.t. ax + by = gcd(a, b)
- *
- * @tparam T  Integer type for first argument
- * @tparam U  Integer type for second argument
- * @tparam R  Signed integer type for return value
- * @param [in]  a  First input parameter
- * @param [in]  b  Second input parameter
- * @param [out] x  First output parameter
- * @param [out] y  Second output parameter
- *
- * @return  G.C.D. of a and b
- */
-template<
-  typename T,
-  typename U,
-  typename R = typename std::make_signed<typename std::common_type<T, U>::type>::type
->
-static inline R
-extgcd(T a, U b, R& x, R& y) noexcept
-{
-  static_assert(
-    std::is_integral<T>::value && std::is_integral<U>::value && std::is_signed<R>::value,
-    "[extgcd] T and U must be integer type, R must be a signed integer type");
-
-  if (b == 0) {
-    x = 1;
-    y = 0;
-    return a;
-  } else {
-    auto g = extgcd(b, a % b, y, x);
-    y -= (a / b) * x;
-    return g;
-  }
-}
-
-
-/*!
- * @brief Extended Euclidean algorithm
- * Calculate (x, y) s.t. ax + by = gcd(a, b)
- *
- * @tparam T  Integer type for first argument
- * @tparam U  Integer type for second argument
- * @tparam R  Signed integer type for return value
- * @param [in]  a  First input parameter
- * @param [in]  b  Second input parameter
- *
- * @return  std::pair<R, R> of x and y
- */
-template<
-  typename T,
-  typename U,
-  typename R = typename std::make_signed<typename std::common_type<T, U>::type>::type
->
-static inline std::pair<R, R>
-extgcd(T a, U b) noexcept
-{
-  static_assert(
-    std::is_integral<T>::value && std::is_integral<U>::value && std::is_signed<R>::value,
-    "[extgcd] T and U must be integer type, R must be a signed integer type");
-
-  if (b == 0) {
-    return std::make_pair(1, 0);
-  } else{
-    const auto xy = extgcd(b, a % b);
-    return std::make_pair(xy.second, xy.first - a / b * xy.second);
-  }
-}
-
-
-/*!
  * @brief Determine if two integers are coprime or not.
  *
  * @tparam T  Integer type for first argument
@@ -330,6 +260,82 @@ coprime(T a, U b) noexcept
 
 
 /*!
+ * @brief Extended Euclidean algorithm
+ * Calculate (x, y) s.t. ax + by = gcd(a, b)
+ *
+ * @tparam T  Integer type for first argument
+ * @tparam U  Integer type for second argument
+ * @tparam R  Signed integer type for third argument
+ * @tparam S  Signed integer type for fourth argument
+ * @param [in]  a  First input parameter
+ * @param [in]  b  Second input parameter
+ * @param [out] x  First output parameter
+ * @param [out] y  Second output parameter
+ *
+ * @return  G.C.D. of a and b
+ */
+template<
+  typename T,
+  typename U,
+  typename R,
+  typename S
+>
+static inline T
+extgcd(T a, U b, R& x, S& y) noexcept
+{
+  static_assert(std::is_integral<T>::value, "[extgcd] Type of first argument must be an integer");
+  static_assert(std::is_integral<U>::value, "[extgcd] Type of second argument must be an integer");
+  static_assert(std::is_signed<R>::value, "[extgcd] Type of third argument must be a signed integer");
+  static_assert(std::is_signed<S>::value, "[extgcd] Type of fourth argument must be a signed integer");
+
+  x = 1;
+  y = 0;
+  for (R u = 0, v = 1; b != 0; ) {
+    const auto q = a / b;
+    std::swap(u, x -= q * u);
+    std::swap(v, y -= q * v);
+    std::swap(b, a -= q * b);
+  }
+  return a;
+}
+
+
+/*!
+ * @brief Extended Euclidean algorithm
+ * Calculate (x, y) s.t. ax + by = gcd(a, b)
+ *
+ * @tparam T  Integer type for first argument
+ * @tparam U  Integer type for second argument
+ * @tparam R  Signed integer type for x and y
+ * @param [in]  a  First input parameter
+ * @param [in]  b  Second input parameter
+ *
+ * @return  std::tuple<R, R> of G.C.D., x and y
+ */
+template<
+  typename T,
+  typename U,
+  typename R = typename std::make_signed<typename std::common_type<T, U>::type>::type
+>
+static inline std::tuple<T, R, R>
+extgcd(T a, U b) noexcept
+{
+  static_assert(std::is_integral<T>::value, "[extgcd] Type of first argument must be an integer");
+  static_assert(std::is_integral<U>::value, "[extgcd] Type of second argument must be an integer");
+
+  R x = 1;
+  R y = 0;
+  for (R u = 0, v = 1; b != 0; ) {
+    const auto q = a / b;
+    std::swap(u, x -= q * u);
+    std::swap(v, y -= q * v);
+    std::swap(b, a -= q * b);
+  }
+  return std::make_tuple(a, x, y);
+}
+
+
+/*!
  * @brief Calculate modular multiplicative inverse
  *
  * i.e caluculate x s.t. ax = 1 (mod m)
@@ -348,11 +354,11 @@ template<
 static inline typename std::common_type<T, U>::type
 modinv(T a, U mod) noexcept
 {
-  static_assert(
-    std::is_integral<T>::value && std::is_integral<U>::value,
-    "[modinv] T and U must be integer type");
+  static_assert(std::is_integral<T>::value, "[modinv] Type of first argument must be an integer");
+  static_assert(std::is_integral<U>::value, "[modinv] Type of second argument must be an integer");
 
-  return (mod + extgcd(a, mod).first % mod) % mod;
+  const auto t = extgcd(a, mod);
+  return std::get<0>(t) == 1 ? (std::get<1>(t) + mod) % mod : 0;
 }
 
 
