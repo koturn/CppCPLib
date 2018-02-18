@@ -1,84 +1,115 @@
+/*!
+ * @file Graph.hpp
+ * @brief Utility classes about graph
+ * @author koturn
+ */
 #ifndef GRAPH_HPP
 #define GRAPH_HPP
 
 #include <iostream>
-#include <unordered_set>
-#include <vector>
+#include <memory>
 #include <queue>
 #include <type_traits>
-#include <memory>
+#include <unordered_set>
+#include <vector>
 
 
+template<typename T>
 class ShortestPathSolver
 {
 public:
-  virtual inline void addEdge(int from, int to, int cost) = 0;
-  virtual inline void addDirectedEdge(int from, int to, int cost) = 0;
-  virtual inline std::vector<int> shortestPath(int from) = 0;
+  /*!
+   * @brief Add edge to the graph
+   *
+   * @param [in] from  Start point of the edge
+   * @param [in] to    End point of the edge
+   * @param [in] cost  Cost of edge
+   */
+  void
+  addEdge(int from, int to, int cost) noexcept
+  {
+    static_cast<T*>(this)->addEdge_(from, to, cost);
+  }
 
-  inline int shortestPath(int from, int to)
+  void
+  addDirectedEdge(int from, int to, int cost) noexcept
+  {
+    static_cast<T*>(this)->addDirectedEdge_(from, to, cost);
+  }
+
+  std::vector<int>
+  shortestPath(int from) noexcept
+  {
+    return static_cast<T*>(this)->shortestPath_(from);
+  }
+
+  int
+  shortestPath(int from, int to) noexcept
   {
     return shortestPath(from)[to];
   }
-  virtual ~ShortestPathSolver() = default;
 };  // class ShortestPathSolver
 
 
 class BellmanFord :
-  public ShortestPathSolver
+  public ShortestPathSolver<BellmanFord>
 {
+  friend class ShortestPathSolver<BellmanFord>;
+
 private:
   struct Edge {
-    int from;
-    int to;
-    int cost;
     Edge() :
       from(0),
       to(0),
       cost(0)
     {}
-    Edge(int from, int to, int cost) :
-      from(from),
-      to(to),
-      cost(cost)
+
+    Edge(int from_, int to_, int cost_) :
+      from(from_),
+      to(to_),
+      cost(cost_)
     {}
+
+    int from;
+    int to;
+    int cost;
   };
-  std::vector<Edge> graph;
-  std::unordered_set<int> vertex;
+
 public:
   BellmanFord() :
     ShortestPathSolver(),
-    graph(),
-    vertex()
+    m_graph(),
+    m_vertex()
   {}
 
+private:
   void
-  addEdge(int from, int to, int cost)
+  addEdge_(int from, int to, int cost) noexcept
   {
     addDirectedEdge(from, to, cost);
-    graph.emplace_back(Edge(to, from, cost));
+    m_graph.emplace_back(to, from, cost);
   }
 
   void
-  addDirectedEdge(int from, int to, int cost)
+  addDirectedEdge_(int from, int to, int cost) noexcept
   {
-    vertex.insert(from);
-    vertex.insert(to);
-    graph.emplace_back(Edge(from, to, cost));
+    m_vertex.insert(from);
+    m_vertex.insert(to);
+    m_graph.emplace_back(from, to, cost);
   }
 
   std::vector<int>
-  shortestPath(int from)
+  shortestPath_(int from) const noexcept
   {
-    static constexpr int INF = 0x3f3f3f3f;
-    std::vector<int> dists(vertex.size());
-    std::fill(dists.begin(), dists.end(), INF);
+    static constexpr int kInf = 0x3f3f3f3f;
+    std::vector<int> dists(m_vertex.size());
+    std::fill(std::begin(dists), std::end(dists), kInf);
     dists[from] = 0;
-    while (true) {
-      bool isUpdated = false;
-      for (decltype(graph)::size_type i = 0; i < graph.size(); i++) {
-        const Edge& e = graph[i];
-        if (dists[e.from] != INF && dists[e.to] > dists[e.from] + e.cost) {
+    for (;;) {
+      auto isUpdated = false;
+      for (decltype(m_graph)::size_type i = 0; i < m_graph.size(); i++) {
+        const Edge& e = m_graph[i];
+        if (dists[e.from] != kInf && dists[e.to] > dists[e.from] + e.cost) {
           dists[e.to] = dists[e.from] + e.cost;
           isUpdated = true;
         }
@@ -89,12 +120,17 @@ public:
     }
     return dists;
   }
+
+  std::vector<Edge> m_graph;
+  std::unordered_set<int> m_vertex;
 };  // class BellmanFord
 
 
 class Dijkstra :
-  public ShortestPathSolver
+  public ShortestPathSolver<Dijkstra>
 {
+  friend class ShortestPathSolver<Dijkstra>;
+
 private:
   struct Edge {
     int to;
@@ -103,64 +139,65 @@ private:
       to(0),
       cost(0)
     {}
-    Edge(int to, int cost) :
-      to(to),
-      cost(cost)
+
+    Edge(int to_, int cost_) :
+      to(to_),
+      cost(cost_)
     {}
   };
 
-  std::vector<std::vector<Edge> > graph;
-  std::unordered_set<int> vertex;
 public:
   Dijkstra() :
     ShortestPathSolver(),
-    graph(),
-    vertex()
+    m_graph(),
+    m_vertex()
   {}
 
   Dijkstra(int v) :
     ShortestPathSolver(),
-    graph(v),
-    vertex()
+    m_graph(v),
+    m_vertex()
   {}
 
+private:
   void
-  addEdge(int from, int to, int cost)
+  addEdge_(int from, int to, int cost)
   {
     addDirectedEdge(from, to, cost);
-    graph[to].emplace_back(Edge(from, cost));
+    m_graph[to].emplace_back(Edge(from, cost));
   }
 
   void
-  addDirectedEdge(int from, int to, int cost)
+  addDirectedEdge_(int from, int to, int cost)
   {
-    int m = std::max(from, to);
-    if (graph.size() <= m) {
-      graph.resize(m + 1);
+    auto m = static_cast<decltype(m_graph)::size_type>(std::max(from, to));
+    if (m_graph.size() <= m) {
+      m_graph.resize(m + 1);
     }
-    vertex.insert(from);
-    vertex.insert(to);
-    graph[from].emplace_back(Edge(to, cost));
+    m_vertex.insert(from);
+    m_vertex.insert(to);
+    m_graph[from].emplace_back(Edge(to, cost));
   }
 
   std::vector<int>
-  shortestPath(int from)
+  shortestPath_(int from) const
   {
     using P = std::pair<int, int>;  // firstは最短距離，secondは頂点の番号
-    static constexpr int INF = 0x3f3f3f3f;
+    static constexpr int kInf = 0x3f3f3f3f;
     std::priority_queue<P, std::vector<P>, std::greater<P> > pQueue;
-    std::vector<int> dists(vertex.size());
-    std::fill(dists.begin(), dists.end(), INF);
+    std::vector<int> dists(m_vertex.size());
+    std::fill(dists.begin(), dists.end(), kInf);
     dists[from] = 0;
     pQueue.push(P(0, from));
     while (!pQueue.empty()) {
-      P p = pQueue.top(); pQueue.pop();
-      int v = p.second;
+      auto p = pQueue.top();
+      pQueue.pop();
+      auto v = p.second;
       if (dists[v] < p.first) {
         continue;
       }
-      for (decltype(graph)::size_type i = 0; i < graph[v].size(); i++) {
-        const Edge& e = graph[v][i];
+      for (decltype(m_graph)::size_type i = 0; i < m_graph[v].size(); i++) {
+        const auto& e = m_graph[v][i];
         if (dists[e.to] > dists[v] + e.cost) {
           dists[e.to] = dists[v] + e.cost;
           pQueue.push(P(dists[e.to], e.to));
@@ -169,96 +206,100 @@ public:
     }
     return dists;
   }
+
+  std::vector<std::vector<Edge> > m_graph;
+  std::unordered_set<int> m_vertex;
 };  // class Dijkstra
 
 
 class WarshalFloyd :
-  public ShortestPathSolver
+  public ShortestPathSolver<WarshalFloyd>
 {
-private:
-  static constexpr int DEFAULT_SIZE = 16;
-  static constexpr int INF = 0x3f3f3f3f;
-  int nVertex;
-  std::unique_ptr<int[]> graph;
-  std::unordered_set<int> vertex;
+  friend class ShortestPathSolver<WarshalFloyd>;
+
 public:
   WarshalFloyd() :
     ShortestPathSolver(),
-    nVertex(DEFAULT_SIZE),
-    graph(new int[DEFAULT_SIZE * DEFAULT_SIZE]),
-    vertex()
+    nVertex(kDefaultSize),
+    m_graph(new int[kDefaultSize * kDefaultSize]),
+    m_vertex()
   {
-    std::fill_n(graph.get(), DEFAULT_SIZE * DEFAULT_SIZE, INF);
+    std::fill_n(m_graph.get(), kDefaultSize * kDefaultSize, kInf);
     for (int i = 0; i < nVertex; i++) {
-      graph[i *  nVertex + i] = 0;
+      m_graph[i *  nVertex + i] = 0;
     }
   }
-
 
   WarshalFloyd(int v) :
     nVertex(v),
-    graph(new int[v * v]),
-    vertex()
+    m_graph(new int[v * v]),
+    m_vertex()
   {
-    std::fill_n(graph.get(), v * v, INF);
+    std::fill_n(m_graph.get(), v * v, kInf);
     for (int i = 0; i < nVertex; i++) {
-      graph[i *  nVertex + i] = 0;
+      m_graph[i *  nVertex + i] = 0;
     }
   }
 
-
+private:
   void
-  addEdge(int from, int to, int cost)
+  addEdge_(int from, int to, int cost) noexcept
   {
     addDirectedEdge(from, to, cost);
-    graph[to * nVertex + from] = cost;
+    m_graph[to * nVertex + from] = cost;
   }
 
   void
-  addDirectedEdge(int from, int to, int cost)
+  addDirectedEdge_(int from, int to, int cost) noexcept
   {
     int m = std::max(from, to);
     if (nVertex <= m) {
-      std::unique_ptr<int[]> origGraph(std::move(graph));
+      std::unique_ptr<int[]> origGraph(std::move(m_graph));
       m++;
-      graph.reset(new int[m * m]);
+      m_graph.reset(new int[m * m]);
       for (int i = 0; i < nVertex; i++) {
         for (int j = 0; j < nVertex; j++) {
-          graph[i * m + j] = origGraph[i * nVertex + j];
+          m_graph[i * m + j] = origGraph[i * nVertex + j];
         }
       }
       for (int i = 0; i < nVertex; i++) {
         for (int j = nVertex; j < m; j++) {
-          graph[i * m + j] = INF;
+          m_graph[i * m + j] = kInf;
         }
       }
       for (int i = nVertex; i < m; i++) {
         for (int j = 0; j < m; j++) {
-          graph[i * m + j] = INF;
+          m_graph[i * m + j] = kInf;
         }
       }
       for (int i = 0; i < m; i++) {
-        graph[i * m + i] = 0;
+        m_graph[i * m + i] = 0;
       }
     }
-    vertex.insert(from);
-    vertex.insert(to);
-    graph[from * nVertex + to] = cost;
+    m_vertex.insert(from);
+    m_vertex.insert(to);
+    m_graph[from * nVertex + to] = cost;
   }
 
   std::vector<int>
-  shortestPath(int from)
+  shortestPath_(int from) noexcept
   {
     for (int k = 0; k < nVertex; k++) {
       for (int i = 0; i < nVertex; i++) {
         for (int j = 0; j < nVertex; j++) {
-          graph[i * nVertex + j] = std::min(graph[i * nVertex + j], graph[i * nVertex + k] + graph[k * nVertex + j]);
+          m_graph[i * nVertex + j] = std::min(m_graph[i * nVertex + j], m_graph[i * nVertex + k] + m_graph[k * nVertex + j]);
         }
       }
     }
-    auto ptr = graph.get() + from * nVertex;
+    auto ptr = m_graph.get() + from * nVertex;
     return std::vector<int>(ptr, ptr + nVertex);
   }
+
+  static constexpr int kDefaultSize = 16;
+  static constexpr int kInf = 0x3f3f3f3f;
+  int nVertex;
+  std::unique_ptr<int[]> m_graph;
+  std::unordered_set<int> m_vertex;
 };  // class WarshalFloyd
 
 
