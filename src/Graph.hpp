@@ -304,4 +304,156 @@ private:
 };  // class WarshalFloyd
 
 
+template<
+  typename C,
+  typename T = int,
+  typename U = int
+>
+class SpanningTree
+{
+private:
+  using E = Edge<T, U>;
+
+public:
+  SpanningTree(std::size_t graphSize) noexcept
+    : m_graph(graphSize)
+  {}
+
+  void
+  addEdge(T from, T to, U cost) noexcept
+  {
+    m_graph[from].emplace_back(from, to, cost);
+  }
+
+  void
+  addEdge(const E& edge) noexcept
+  {
+    m_graph[edge.from].push_back(edge);
+  }
+
+  std::pair<U, std::vector<E>>
+  solve() noexcept
+  {
+    return static_cast<C*>(this)->solve_();
+  }
+
+protected:
+  std::vector<std::vector<E>>&
+  getGraphRef() noexcept
+  {
+    return m_graph;
+  }
+
+private:
+  std::vector<std::vector<E>> m_graph;
+};  // class SpanningTree
+
+
+template<
+  typename T = int,
+  typename U = int
+>
+class SpanningTreePrim
+  : public SpanningTree<SpanningTreePrim<T, U>, T, U>
+{
+private:
+  using Base = SpanningTree<SpanningTreePrim<T, U>, T, U>;
+  using E = Edge<T, U>;
+
+  friend Base;
+
+public:
+  SpanningTreePrim(std::size_t graphSize) noexcept
+    : Base(graphSize)
+  {}
+
+private:
+  std::pair<U, std::vector<E>>
+  solve_(T r = 0) noexcept
+  {
+    std::vector<E> edges;
+    U total = 0;
+    auto& graph = Base::getGraphRef();
+    std::vector<bool> isVisited(graph.size());
+
+    const auto compare = [](const E& x, const E& y) {
+      return x.cost > y.cost;
+    };
+    std::priority_queue<E, std::vector<E>, decltype(compare)> q(compare);
+    q.emplace(-1, r, 0);
+
+    while (!q.empty()) {
+      const auto e = q.top();
+      q.pop();
+      if (isVisited[e.to]) {
+        continue;
+      }
+      isVisited[e.to] = true;
+      total += e.cost;
+      if(e.from != -1) {
+        edges.push_back(e);
+      }
+      for (const auto& f : graph[e.to]) {
+        if (!isVisited[f.to]) {
+          q.push(f);
+        }
+      }
+    }
+    return std::make_pair(total, edges);
+  }
+};  // class SpanningTreePrim
+
+
+template<
+  typename T = int,
+  typename U = int
+>
+class SpanningTreeKruskal
+  : public SpanningTree<SpanningTreeKruskal<T, U>, T, U>
+{
+private:
+  using Base = SpanningTree<SpanningTreeKruskal<T, U>, T, U>;
+  using E = Edge<T, U>;
+
+  friend Base;
+
+public:
+  SpanningTreeKruskal(std::size_t graphSize) noexcept
+    : Base(graphSize)
+  {}
+
+private:
+  std::pair<U, std::vector<E>>
+  solve_() noexcept
+  {
+    auto& graph = Base::getGraphRef();
+
+    UnionFind<T> uf(graph.size());
+
+    std::vector<E> allEdges;
+    for (const auto& adj : graph) {
+      std::copy(std::begin(adj), std::end(adj), std::back_inserter(allEdges));
+    }
+
+    std::sort(
+      std::begin(allEdges),
+      std::end(allEdges),
+      [](const E& x, const E& y) {
+        return x.cost < y.cost;
+      });
+
+    U total = 0;
+    std::vector<E> edges;
+    for (const auto& e : allEdges) {
+      if (!uf.isSame(e.from, e.to)) {
+        edges.push_back(e);
+        total += e.cost;
+        uf.unite(e.from, e.to);
+      }
+    }
+    return std::make_pair(total, edges);
+  }
+};  // class SpanningTreeKruskal
+
+
 #endif  // GRAPH_HPP
