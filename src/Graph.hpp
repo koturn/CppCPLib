@@ -6,12 +6,15 @@
 #ifndef GRAPH_HPP
 #define GRAPH_HPP
 
+#include <algorithm>
 #include <memory>
 #include <queue>
 #include <type_traits>
 #include <unordered_set>
 #include <utility>
 #include <vector>
+
+#include "UnionFind.hpp"
 
 
 template<

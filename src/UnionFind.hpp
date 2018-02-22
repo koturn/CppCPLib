@@ -7,7 +7,6 @@
 #define UNION_FIND_HPP
 
 #include <cstdlib>
-#include <iostream>
 #include <numeric>
 #include <type_traits>
 #include <vector>
@@ -40,7 +39,7 @@ public:
    * @return node number
    */
   T
-  find(T x)
+  find(T x) noexcept
   {
     return m_par[x] == x ? x : (m_par[x] = find(m_par[x]));
   }
@@ -52,7 +51,7 @@ public:
    * @param [in] y
    */
   void
-  unite(T x, T y)
+  unite(T x, T y) noexcept
   {
     x = find(x);
     y = find(y);
@@ -76,7 +75,7 @@ public:
    * @return Return true if two nodes are same group, otherwise false
    */
   bool
-  same(T x, T y)
+  isSame(T x, T y) noexcept
   {
     return find(x) == find(y);
   }
