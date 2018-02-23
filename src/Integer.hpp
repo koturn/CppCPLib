@@ -8,6 +8,7 @@
 
 #include <cmath>
 #include <algorithm>
+#include <numeric>
 #include <tuple>
 #include <type_traits>
 #include <unordered_map>
@@ -228,8 +229,8 @@ gcd(T a, T b) noexcept
 #elif defined(__GNUC__)
   return std::__gcd(a, b);  // <algorithm>
 #else
-  T r;
-  while ((r = a % b) != 0) {
+  while (b != 0) {
+    const auto r = a % b;
     a = b;
     b = r;
   }
@@ -303,22 +304,45 @@ template<
   typename S
 >
 static inline T
-extgcd(T a, U b, R& x, S& y) noexcept
+extgcd(T a, U b, R&& x, S&& y) noexcept
 {
+  using R2 = typename std::remove_reference<R>::type;
+  using S2 = typename std::remove_reference<S>::type;
+
   static_assert(std::is_integral<T>::value, "[extgcd] Type of the first argument must be an integer");
   static_assert(std::is_integral<U>::value, "[extgcd] Type of the second argument must be an integer");
-  static_assert(std::is_signed<R>::value, "[extgcd] Type of the third argument must be a signed integer");
-  static_assert(std::is_signed<S>::value, "[extgcd] Type of the fourth argument must be a signed integer");
+  static_assert(std::is_signed<R2>::value, "[extgcd] Type of the third argument must be a signed integer or its reference");
+  static_assert(std::is_signed<S2>::value, "[extgcd] Type of the fourth argument must be a signed integer or its reference");
 
+#if true
+  if (b == 0) {
+    x = 1;
+    y = 0;
+    return a;
+  } else {
+    const auto g = extgcd(b, a % b, y, x);
+    y -= (a / b) * x;
+    return g;
+  }
+#else
   x = 1;
   y = 0;
-  for (R u = 0, v = 1; b != 0; ) {
+  R2 u = 0;
+  S2 v = 1;
+  while (b != 0) {
     const auto q = a / b;
-    std::swap(u, x -= q * u);
-    std::swap(v, y -= q * v);
-    std::swap(b, a -= q * b);
+    const auto x_ = x - q * u;
+    x = u;
+    u = x_;
+    const auto y_ = y - q * v;
+    y = v;
+    v = y_;
+    const auto a_ = a - q * b;
+    a = b;
+    b = a_;
   }
   return a;
+#endif
 }
 
 
@@ -382,6 +406,7 @@ modinv(T a, U mod) noexcept
 /*!
  * @brief Calculate n! mod m while avoiding overflow
  *
+ * @tparam R  Integer type for calculate and return value
  * @tparam T  Integer type for target integer
  * @tparam U  Integer type for modulo
  * @param [in] n    Target integer
@@ -390,17 +415,19 @@ modinv(T a, U mod) noexcept
  * @return n! mod m
  */
 template<
+  typename R = std::uint64_t,
   typename T,
   typename U
 >
-static inline typename std::common_type<T, U>::type
+static inline typename std::common_type<R, T, U>::type
 modfact(T n, U mod) noexcept
 {
+  static_assert(std::is_integral<R>::value, "[modfact] Type of the return value must be an integer");
   static_assert(std::is_integral<T>::value, "[modfact] Type of the first argument must be an integer");
   static_assert(std::is_integral<U>::value, "[modfact] Type of the second argument must be an integer");
 
-  typename std::common_type<T, U>::type p = 1;
-  for (; n > 0; n--) {
+  R p = 1;
+  for (; n > 1; n--) {
     p = (p * n) % mod;
   }
   return p;
@@ -408,8 +435,36 @@ modfact(T n, U mod) noexcept
 
 
 /*!
+ * @brief Calculate n! mod m while avoiding overflow
+ *
+ * @tparam kMod  Modulo
+ * @tparam R  Integer type for calculate and return value
+ * @tparam T  Integer type for target integer
+ * @param n  Target integer
+ *
+ * @return n! mod m
+ */
+template<
+  std::uint64_t kMod,
+  typename R = std::uint64_t,
+  typename T
+>
+static inline typename std::common_type<R, T, std::uint64_t>::type
+modfact(T n) noexcept
+{
+  static_assert(std::is_integral<R>::value, "[modfact] Type of the return value must be an integer");
+  static_assert(std::is_integral<T>::value, "[modfact] Type of the first argument must be an integer");
+  static_assert(
+    kMod <= std::numeric_limits<R>::max() / kMod && kMod * kMod > kMod,
+    "[modfact] There is a possibility that the calculation result may overflow");
+  return modfact<R>(n, kMod);
+}
+
+
+/*!
  * @brief Calculate a ** p mod m while avoiding overflow
  *
+ * @tparam R  Integer type for calculate and return value
  * @tparam T  Integer type for base
  * @tparam U  Integer type for exponent
  * @tparam V  Integer type for modulo
@@ -420,26 +475,58 @@ modfact(T n, U mod) noexcept
  * @return a ** p mod m
  */
 template<
+  typename R = std::uint64_t,
   typename T,
   typename U,
   typename V
 >
-static inline typename std::common_type<T, V>::type
+static inline typename std::common_type<R, V>::type
 modpow(T a, U p, V mod) noexcept
 {
+  static_assert(std::is_integral<R>::value, "[modpow] Type of the return value must be an integer");
   static_assert(std::is_integral<T>::value, "[modpow] Type of the first argument must be an integer");
   static_assert(std::is_integral<U>::value, "[modpow] Type of the second argument must be an integer");
+  static_assert(std::is_integral<V>::value, "[modpow] Type of the third argument must be an integer");
 
-  typename std::common_type<T, V>::type ans = 1;
-  for (; p > 0; p >>= 1, a = (a * a) % mod) {
+  R ans = 1;
+  for (auto b = static_cast<R>(a); p > 0; p >>= 1, b = (b * b) % mod) {
     if ((p & 1) == 1) {
-      ans = (ans * a) % mod;
+      ans = (ans * b) % mod;
     }
   }
   return ans;
 }
 
 
+/*!
+ * @brief Calculate a ** p mod m while avoiding overflow
+ *
+ * @tparam kMod  Modulo (constant value at compile time)
+ * @tparam R  Integer type for calculate and return value
+ * @tparam T  Integer type for base
+ * @tparam U  Integer type for exponent
+ * @param [in] a  Base
+ * @param [in] p  Exponent
+ *
+ * @return a ** p mod m
+ */
+template<
+  std::uint64_t kMod,
+  typename R = std::uint64_t,
+  typename T,
+  typename U
+>
+static inline typename std::common_type<R, std::uint64_t>::type
+modpow(T a, U p) noexcept
+{
+  static_assert(std::is_integral<R>::value, "[modpow] Type of the return value must be an integer");
+  static_assert(std::is_integral<T>::value, "[modpow] Type of the first argument must be an integer");
+  static_assert(std::is_integral<U>::value, "[modpow] Type of the second argument must be an integer");
+  static_assert(
+    kMod <= std::numeric_limits<R>::max() / kMod && kMod * kMod > kMod,
+    "[modpow] There is a possibility that the calculation result may overflow");
+  return modpow<R>(a, p, kMod);
+}
 /*!
  * @brief Calculate an integer k s.t. x ** k mod m == y
  *
@@ -530,7 +617,7 @@ template<typename T>
 static inline T
 carmichaelLambda(T n) noexcept
 {
-  static_assert(std::is_integral<T>::value, "[carmichaelLambda] Type of the first argument must be an integer"); 
+  static_assert(std::is_integral<T>::value, "[carmichaelLambda] Type of the first argument must be an integer");
   if (n % 8 == 0) {
     n /= 2;
   }
