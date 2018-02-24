@@ -29,13 +29,13 @@ isPrime(T n) noexcept
 
   if (n < 2) {
     return false;
-  } else if (n == 2) {
+  } else if (n == 2 || n == 3) {
     return true;
-  } else if (n % 2 == 0) {
+  } else if (n % 2 == 0 || n % 3 == 0) {
     return false;
   }
-  for (T i = 3; i * i <= n; i += 2) {
-    if (n % i == 0) {
+  for (T i = 5; i * i <= n; i += 6) {
+    if (n % i == 0 || n % (i + 2) == 0) {
       return false;
     }
   }
@@ -62,10 +62,16 @@ makePrimeTable(T n) noexcept
   }
   std::vector<bool> primeTable(n + 1, true);
   primeTable[0] = primeTable[1] = false;
-  for (int i = 2; i * i <= n; i++) {
+  if (n < 2) {
+    return primeTable;
+  }
+  for (T i = 4; i <= n; i += 2) {
+    primeTable[i] = false;
+  }
+  for (T i = 3; i * i <= n; i += 2) {
     if (primeTable[i]) {
-      for (int j = i * 2; j <= n; j += i) {
-        primeTable[i] = false;
+      for (T j = i * i; j <= n; j += i * 2) {
+        primeTable[j] = false;
       }
     }
   }
@@ -92,10 +98,16 @@ makePrimeList(T n) noexcept
   }
   std::vector<T> primeList(n + 1);
   std::iota(std::begin(primeList), std::end(primeList), 0);
-  for (int i = 2; i * i <= n; i++) {
+  if (n < 2) {
+    return primeList;
+  }
+  for (T i = 4; i <= n; i += 2) {
+    primeList[i] = 0;
+  }
+  for (T i = 3; i * i <= n; i += 2) {
     if (primeList[i] != 0) {
-      for (int j = i * 2; j <= n; j += i) {
-        primeList[i] = 0;
+      for (T j = i * i; j <= n; j += i * 2) {
+        primeList[j] = 0;
       }
     }
   }
