@@ -136,17 +136,23 @@ defactorize(T n, const F& f) noexcept
 {
   static_assert(std::is_integral<T>::value, "[defactorize] Type of the first argument must be an integer");
 
-  int cnt = 0;
-  for (; n % 2 == 0; n /= 2, cnt++);
-  if (cnt != 0) {
-    f(2, cnt);
+  if (n < 2) {
+    return;
   }
-  for (T i = 3; i * i <= n; i += 2) {
-    cnt = 0;
-    for (; n % i == 0; n /= i, cnt++);
+
+  const auto g = [&n, &f](T e){
+    int cnt = 0;
+    for (; n % e == 0; n /= e, cnt++);
     if (cnt != 0) {
-      f(i, cnt);
+      f(e, cnt);
     }
+  };
+
+  g(2);
+  g(3);
+  for (T i = 5; i * i <= n; i += 6) {
+    g(i);
+    g(i + 2);
   }
   if (n != 1) {
     f(n, 1);
@@ -381,8 +387,7 @@ extgcd(T a, U b) noexcept
   static_assert(std::is_integral<T>::value, "[extgcd] Type of the first argument must be an integer");
   static_assert(std::is_integral<U>::value, "[extgcd] Type of the second argument must be an integer");
 
-  R x = 1;
-  R y = 0;
+  R x, y;
   auto g = extgcd(a, b, x, y);
   return std::make_tuple(g, x, y);
 }
@@ -603,22 +608,29 @@ modlog(T x, U y, V mod) noexcept
  * @return  The number of disjoint integers
  */
 template<typename T>
-static inline int
+static inline T
 eulerTotient(T n) noexcept
 {
   static_assert(std::is_integral<T>::value, "[eulerTotient] Type of the first argument must be an integer");
 
-  int nDisjoint = n;
-  for (T i = 2; i * i <= n; i++) {
-    if (n % i == 0) {
-      nDisjoint -= nDisjoint / i;
-      while (n % i == 0) {
-        n /= i;
-      }
+  T nDisjoint = n;
+  const auto f = [&n, &nDisjoint](T e){
+    if (n % e == 0) {
+      nDisjoint -= nDisjoint / e;
+      do {
+        n /= e;
+      } while (n % e == 0);
     }
+  };
+  for (const auto& e : { 2, 3 }) {
+    f(e);
+  }
+  for (T i = 5; i * i <= n; i += 6) {
+    f(i);
+    f(i + 2);
   }
   if (n > 1) {
-    nDisjoint -= n;
+    nDisjoint -= nDisjoint / n;
   }
   return nDisjoint;
 }
@@ -630,22 +642,31 @@ static inline T
 carmichaelLambda(T n) noexcept
 {
   static_assert(std::is_integral<T>::value, "[carmichaelLambda] Type of the first argument must be an integer");
+
   if (n % 8 == 0) {
     n /= 2;
   }
 
   T ans = 1;
-  for (T i = 2; i <= n; i++) {
-    if (n % i == 0) {
-      T y = i - 1;
-      n /= i;
-      while (n % i == 0) {
-        n /= i;
-        y *= i;
+  const auto f = [&n, &ans](T e) {
+    if (n % e == 0) {
+      T y = e - 1;
+      n /= e;
+      while (n % e == 0) {
+        n /= e;
+        y *= e;
       }
       ans = lcm(ans, y);
     }
+  };
+
+  f(2);
+  f(3);
+  for (T i = 5; i <= n; i += 6) {
+    f(i);
+    f(i + 2);
   }
+
   return ans;
 }
 
